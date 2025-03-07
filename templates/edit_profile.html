@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h1 class="text-2xl font-bold mb-6">Edit Profile</h1>
+        
+        <!-- Current Profile Picture -->
+        <div class="mb-6 text-center">
+            <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" 
+                 alt="{{ current_user.username }}" 
+                 class="w-32 h-32 rounded-full mx-auto mb-4">
+            <p class="text-gray-600">Current Profile Picture</p>
+        </div>
+
+        <!-- Profile Picture Upload Form -->
+        <form action="{{ url_for('edit_profile') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            <div>
+                <label for="profile_pic" class="block text-sm font-medium text-gray-700 mb-2">
+                    Update Profile Picture
+                </label>
+                <input type="file" 
+                       id="profile_pic" 
+                       name="profile_pic" 
+                       accept="image/*"
+                       class="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-pink-50 file:text-pink-700
+                              hover:file:bg-pink-100"
+                       required>
+                <p class="mt-2 text-sm text-gray-500">
+                    Recommended: Square image, maximum size 5MB
+                </p>
+            </div>
+
+            <div class="flex justify-between">
+                <a href="{{ url_for('user_profile', username=current_user.username) }}" 
+                   class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700">
+                    Update Profile Picture
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

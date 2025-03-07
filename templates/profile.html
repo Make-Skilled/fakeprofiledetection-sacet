@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Profile Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex flex-col md:flex-row items-center md:items-start">
+            <div class="relative">
+                <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" 
+                     alt="{{ user.username }}" 
+                     class="w-32 h-32 rounded-full mb-4 md:mb-0 md:mr-8">
+                {% if current_user.is_authenticated and current_user.id == user.id %}
+                <a href="{{ url_for('edit_profile') }}" 
+                   class="absolute bottom-4 right-0 bg-pink-600 text-white p-2 rounded-full hover:bg-pink-700"
+                   title="Edit Profile Picture">
+                    <i class="fas fa-camera"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="text-center md:text-left">
+                <h1 class="text-2xl font-bold mb-2">{{ user.username }}</h1>
+                <div class="text-gray-600 mb-4">{{ user.email }}</div>
+                {% if user.warning_count > 0 %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <strong class="font-bold">Account Warning Status:</strong>
+                    <p class="mt-1">
+                        You have received {{ user.warning_count }}/3 warnings.
+                        {% if user.last_warning_date %}
+                        <br>Last warning received on: {{ user.last_warning_date.strftime('%Y-%m-%d') }}
+                        {% endif %}
+                    </p>
+                    {% if user.warning_count >= 2 %}
+                    <p class="mt-2 text-sm font-bold">⚠️ Your account is at risk of deletion. One more warning will result in account termination.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% if user.is_fake %}
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <strong class="font-bold">⚠️ This account has been identified as fake!</strong>
+                    <p class="mt-1">This account may be involved in suspicious activities.</p>
+                </div>
+                {% endif %}
+                <div class="flex justify-center md:justify-start space-x-8">
+                    <div>
+                        <span class="font-bold">{{ user.posts|length }}</span>
+                        <span class="text-gray-600">posts</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ user.likes|length }}</span>
+                        <span class="text-gray-600">likes given</span>
+                    </div>
+                    <div>
+                        <span class="font-bold">{{ user.comments|length }}</span>
+                        <span class="text-gray-600">comments</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Posts -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold mb-6">Posts</h2>
+        {% if user.posts %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for post in user.posts|sort(attribute='created_at', reverse=true) %}
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <img src="{{ url_for('static', filename='uploads/' + post.image_path) }}" 
+                     alt="Post image" 
+                     class="w-full h-64 object-cover">
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-heart text-red-500"></i>
+                            <span>{{ post.likes|length }} likes</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-comment text-blue-500"></i>
+                            <span>{{ post.comments|length }} comments</span>
+                        </div>
+                        <span class="text-gray-500 text-sm">{{ post.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                    <p class="text-gray-800">{{ post.caption }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-white rounded-lg shadow-md">
+            <div class="text-6xl mb-4"><i class="fas fa-camera text-gray-300"></i></div>
+            <p class="text-gray-500">No posts yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

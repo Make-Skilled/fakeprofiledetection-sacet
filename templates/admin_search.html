@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-4">Search Accounts</h1>
+        
+        <!-- Search Form -->
+        <form method="GET" class="bg-white p-6 rounded-lg shadow-md">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="query" class="block text-sm font-medium text-gray-700 mb-2">Search Username</label>
+                    <input type="text" 
+                           id="query" 
+                           name="query" 
+                           value="{{ query }}"
+                           class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                </div>
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Account Type</label>
+                    <select id="type" 
+                            name="type"
+                            class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        <option value="">All Types</option>
+                        <option value="normal" {% if account_type == 'normal' %}selected{% endif %}>Normal</option>
+                        <option value="suspicious" {% if account_type == 'suspicious' %}selected{% endif %}>Suspicious</option>
+                        <option value="verified" {% if account_type == 'verified' %}selected{% endif %}>Verified</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" 
+                            class="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold mb-4">Search Results</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Score</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Activity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for user in users %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" 
+                                         alt="{{ user.username }}" 
+                                         class="w-8 h-8 rounded-full mr-3">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
+                                        <div class="text-sm text-gray-500">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                           {% if user.account_type == 'suspicious' %}
+                                           bg-red-100 text-red-800
+                                           {% elif user.account_type == 'verified' %}
+                                           bg-green-100 text-green-800
+                                           {% else %}
+                                           bg-gray-100 text-gray-800
+                                           {% endif %}">
+                                    {{ user.account_type }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mr-2">
+                                        <div class="bg-pink-600 h-2.5 rounded-full" style="width: {{ user.risk_score * 100 }}%"></div>
+                                    </div>
+                                    <span class="text-sm text-gray-500">{{ "%.2f"|format(user.risk_score) }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <div>Posts: {{ user.posts|length }}</div>
+                                <div>Comments: {{ user.comments|length }}</div>
+                                <div>Likes: {{ user.likes|length }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button onclick="analyzeAccount({{ user.id }})" 
+                                        class="text-blue-600 hover:text-blue-900 mr-3">
+                                    Analyze
+                                </button>
+                                {% if not user.is_admin %}
+                                <a href="{{ url_for('mark_account', user_id=user.id, status='fake' if not user.is_fake else 'real') }}" 
+                                   class="text-{% if user.is_fake %}green{% else %}red{% endif %}-600 hover:text-{% if user.is_fake %}green{% else %}red{% endif %}-900">
+                                    Mark as {% if user.is_fake %}Real{% else %}Fake{% endif %}
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function analyzeAccount(userId) {
+    fetch(`/admin/analyze_account/${userId}`)
+        .then(response => response.json())
+        .then(data => {
+            alert(`Risk Analysis Results:\nRisk Score: ${data.risk_score.toFixed(2)}\nAccount Type: ${data.account_type}`);
+            location.reload();
+        })
+        .catch(error => console.error('Error:', error));
+}
+</script>
+{% endblock %} 

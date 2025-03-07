@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if not current_user.is_authenticated %}
+<div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-800 mb-4">Welcome to FakeProfile</h1>
+        <p class="text-xl text-gray-600">Detect and prevent fake accounts</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="text-3xl text-pink-600 mb-4"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="text-xl font-semibold mb-2">Identify Fakes</h3>
+            <p class="text-gray-600">Advanced detection system to identify fake accounts</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="text-3xl text-pink-600 mb-4"><i class="fas fa-user-shield"></i></div>
+            <h3 class="text-xl font-semibold mb-2">Protect Users</h3>
+            <p class="text-gray-600">Keep the community safe from scams and fake profiles</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="text-3xl text-pink-600 mb-4"><i class="fas fa-chart-line"></i></div>
+            <h3 class="text-xl font-semibold mb-2">Risk Analysis</h3>
+            <p class="text-gray-600">Advanced risk scoring for suspicious behavior</p>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="{{ url_for('register') }}" class="inline-block bg-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-pink-700 mr-4">
+            Get Started
+        </a>
+        <a href="{{ url_for('login') }}" class="inline-block bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-700">
+            Login
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="max-w-6xl mx-auto">
+    <div class="grid grid-cols-12 gap-6">
+        <!-- User Profile Sidebar -->
+        <div class="col-span-3">
+            <div class="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" 
+                         alt="{{ current_user.username }}" 
+                         class="w-24 h-24 rounded-full mx-auto mb-4">
+                    <h2 class="text-xl font-semibold">{{ current_user.username }}</h2>
+                    <p class="text-gray-600">{{ current_user.email }}</p>
+                    {% if current_user.is_fake %}
+                    <div class="mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                        <p class="font-bold">⚠️ Account marked as fake!</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="border-t pt-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Posts</span>
+                        <span class="font-semibold">{{ current_user.posts|length }}</span>
+                    </div>
+                    <a href="{{ url_for('create_post') }}" 
+                       class="block w-full bg-pink-600 text-white text-center py-2 rounded-lg hover:bg-pink-700 mt-4">
+                        Create New Post
+                    </a>
+                </div>
+
+                <!-- Discover Users -->
+                <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                    <h3 class="font-semibold text-lg mb-4">Discover Users</h3>
+                    <div class="space-y-4">
+                        {% for other_user in users if other_user.id != current_user.id %}
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <img src="{{ url_for('static', filename='uploads/' + other_user.profile_pic) }}" 
+                                     alt="{{ other_user.username }}" 
+                                     class="w-8 h-8 rounded-full mr-3">
+                                <a href="{{ url_for('user_profile', username=other_user.username) }}" 
+                                   class="font-semibold hover:text-pink-600">{{ other_user.username }}</a>
+                            </div>
+                            <span class="text-sm text-gray-500">{{ other_user.posts|length }} posts</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Posts Feed -->
+        <div class="col-span-9">
+            <div class="grid grid-cols-1 gap-6">
+                {% for post in posts %}
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-4 flex items-center justify-between">
+                        <div class="flex items-center">
+                            <img src="{{ url_for('static', filename='uploads/' + post.author.profile_pic) }}" 
+                                 alt="{{ post.author.username }}" 
+                                 class="w-10 h-10 rounded-full mr-3">
+                            <div>
+                                <a href="{{ url_for('user_profile', username=post.author.username) }}" 
+                                   class="font-semibold block hover:text-pink-600">{{ post.author.username }}</a>
+                                <span class="text-gray-500 text-sm">{{ post.created_at.strftime('%B %d, %Y %H:%M') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <img src="{{ url_for('static', filename='uploads/' + post.image_path) }}" 
+                         alt="Post image" 
+                         class="w-full h-auto object-cover">
+                    
+                    <div class="p-4">
+                        <div class="flex items-center space-x-4 mb-4">
+                            <a href="{{ url_for('like_post', post_id=post.id) }}" 
+                               class="text-2xl {% if current_user.is_authenticated and post.likes|selectattr('user_id', 'equalto', current_user.id)|list %}text-red-500{% else %}text-gray-400{% endif %}">
+                                <i class="fas fa-heart"></i>
+                            </a>
+                            <span class="text-gray-600">{{ post.likes|length }} likes</span>
+                        </div>
+                        
+                        <p class="text-gray-800 mb-4">
+                            <a href="{{ url_for('user_profile', username=post.author.username) }}" 
+                               class="font-semibold hover:text-pink-600">{{ post.author.username }}</a>
+                            {{ post.caption }}
+                        </p>
+                        
+                        <div class="border-t pt-4">
+                            <h4 class="font-semibold mb-2">Comments</h4>
+                            <div class="space-y-2 max-h-40 overflow-y-auto mb-4">
+                                {% for comment in post.comments %}
+                                <div class="flex space-x-2">
+                                    <a href="{{ url_for('user_profile', username=comment.user.username) }}" 
+                                       class="font-semibold hover:text-pink-600">{{ comment.user.username }}</a>
+                                    <span class="text-gray-600">{{ comment.content }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <form action="{{ url_for('add_comment', post_id=post.id) }}" method="POST" class="flex space-x-2">
+                                <input type="text" 
+                                       name="content" 
+                                       placeholder="Add a comment..." 
+                                       class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                <button type="submit" 
+                                        class="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                    Post
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %} 
